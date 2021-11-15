@@ -54,7 +54,7 @@ exports.builder = yargs => yargs
  */
 exports.handler = async argv => {
   if (argv.dryRun) {
-    host.report(argv.$0, 'config', argv);
+    host.report('start', 'config', argv);
   } else {
     try {
       // Load WRTC config from Xirsys if available
@@ -75,12 +75,12 @@ exports.handler = async argv => {
         backend = (require('leveldown'))(argv.dataDir);
       // Start the m-ld clone
       const meld = await clone(backend, remotes, argv);
-      host.report(argv.$0, 'started', { cloneId: argv['@id'] });
+      host.report('start', 'started', { '@id': argv['@id'] });
       // Report status messages
       meld.status.subscribe({
-        next: status => host.report(argv.$0, 'status', status),
-        complete: () => host.report(argv.$0, 'closed'),
-        error: err => host.reportError(argv.$0, err)
+        next: status => host.report('start', 'status', status),
+        complete: () => host.report('start', 'closed'),
+        error: err => host.reportError('start', err)
       });
       // Attach listeners for parent process commands
       process.on('message', async message => {
@@ -89,6 +89,7 @@ exports.handler = async argv => {
             case 'stop':
               await meld.close();
               host.report(message.id, 'stopped');
+              process.exit(0);
               break;
             default:
               host.reportError(message.id, `No handler for ${message['@type']}`);
@@ -98,7 +99,7 @@ exports.handler = async argv => {
         }
       });
     } catch (e) {
-      host.reportError(argv.$0, e);
+      host.reportError('start', e);
     }
   }
 };
