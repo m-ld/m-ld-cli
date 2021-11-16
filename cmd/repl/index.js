@@ -102,6 +102,7 @@ class Index {
         .command(require('./file')(ctx))
         .command(require('./start')(ctx))
         .command(require('./read')(ctx))
+        .command(require('./write')(ctx))
         .command(require('./stop')(ctx))
         .command('exit', 'Exit this REPL', yargs => yargs, () => {
           this.close().catch(console.error);

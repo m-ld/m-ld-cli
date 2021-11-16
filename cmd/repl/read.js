@@ -1,11 +1,12 @@
 const { Proc } = require('../../lib/Proc');
 const { Readable } = require('stream');
 const getStream = require('get-stream');
+const stringify = require('json-stringify-pretty-compact');
 
 /**
  * @typedef {import('yargs')} yargs
  * @typedef {import('index').ReplCmdContext} ReplCmdContext
- * @typedef {{ jrql: string, '@id': string }} ReadOpts
+ * @typedef {{ jrql: string|null, '@id': string }} ReadOpts
  */
 
 /**
@@ -18,7 +19,6 @@ module.exports = (ctx) => ({
   builder: yargs => yargs
     .positional('jrql', {
       describe: 'Query in json-rql (TIP: use single quotes)',
-      coerce: JSON.parse,
       demandOption: ctx.stdin == null
     })
     .option('@id', ctx.clones.cloneIdOption('read')),
@@ -35,15 +35,23 @@ class ReadCloneProc extends Proc {
    * @param {string} [jrql]
    */
   constructor(ctx, cloneId, jrql) {
-    const clone = ctx.clones.get(cloneId);
     super(new Readable({ read: () => {} }));
+    const clone = ctx.clones.get(cloneId);
+    let first = true;
     clone.on('message', msg => {
       if (msg.cmdId === ctx.cmdId) {
         switch (msg['@type']) {
           case 'next':
-            this.stdout.push(JSON.stringify(msg.subject));
+            // TODO: make pretty-print optional
+            const subjectJson = stringify(msg.subject);
+            this.stdout.push((first ? '[' : ',\n') + subjectJson);
+            first = false;
             break;
           case 'complete':
+            if (first)
+              this.stdout.push('[]');
+            else
+              this.stdout.push(']');
             this.stdout.push(null);
             break;
           case 'error':
@@ -58,7 +66,7 @@ class ReadCloneProc extends Proc {
       clone.send({
         id: ctx.cmdId,
         '@type': 'read',
-        jrql: jrql || await getStream(ctx.stdin)
+        jrql: JSON.parse(jrql || await getStream(ctx.stdin))
       });
     })().catch(this.setDone);
   }

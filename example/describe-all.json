@@ -1,0 +1,6 @@
+{
+  "@describe": "?id",
+  "@where": {
+    "@id": "?id"
+  }
+}

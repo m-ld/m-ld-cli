@@ -106,6 +106,11 @@ async function handleHostMessage(meld, msg) {
           error: host.errorHandler(msg)
         });
         break;
+      case 'write':
+        meld.write(msg.jrql)
+          .then(() => host.report(msg.id, 'complete'))
+          .catch(host.errorHandler(msg));
+        break;
       case 'stop':
         await meld.close();
         host.report(msg.id, 'stopped');
