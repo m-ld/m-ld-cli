@@ -25,14 +25,17 @@
     "@m-ld/m-ld": "^0.7.1-3",
     "ably": "^1.2.14",
     "dotenv": "^10.0.0",
+    "get-stream": "^6.0.1",
     "leveldown": "^6.1.0",
     "memdown": "^6.1.1",
+    "merge-stream": "^2.0.0",
     "shell-quote": "^1.7.3",
     "simple-peer": "^9.11.0",
     "wrtc": "^0.4.7",
     "yargs": "^17.2.1"
   },
   "devDependencies": {
+    "@types/merge-stream": "^1.1.2",
     "@types/shell-quote": "^1.7.1",
     "@types/yargs": "^17.0.5"
   }

@@ -1,4 +1,4 @@
-const { uuid, clone } = require('@m-ld/m-ld');
+const { uuid, clone, MeldClone } = require('@m-ld/m-ld');
 const { loadWrtcConfig } = require('@m-ld/io-web-runtime/dist/server/xirsys');
 const { AblyRemotes } = require('@m-ld/m-ld/dist/ably');
 const { WrtcPeering } = require('@m-ld/m-ld/dist/wrtc');
@@ -14,7 +14,7 @@ const host = require('../lib/host');
  *    dryRun: boolean
  *  }} StartConfig */
 
-exports.command = 'start';
+exports.command = 'start [@domain]';
 exports.describe = 'start a clone process';
 
 /**
@@ -83,23 +83,38 @@ exports.handler = async argv => {
         error: err => host.reportError('start', err)
       });
       // Attach listeners for parent process commands
-      process.on('message', async message => {
-        try {
-          switch (message['@type']) {
-            case 'stop':
-              await meld.close();
-              host.report(message.id, 'stopped');
-              process.exit(0);
-              break;
-            default:
-              host.reportError(message.id, `No handler for ${message['@type']}`);
-          }
-        } catch (e) {
-          host.reportError(message.id, e);
-        }
-      });
+      process.on('message', msg => handleHostMessage(meld, msg));
     } catch (e) {
       host.reportError('start', e);
     }
   }
 };
+
+/**
+ *
+ * @param {MeldClone} meld
+ * @param {object} msg
+ * @returns {Promise<void>}
+ */
+async function handleHostMessage(meld, msg) {
+  try {
+    switch (msg['@type']) {
+      case 'read':
+        meld.read(msg.jrql).subscribe({
+          next: subject => host.report(msg.id, 'next', { subject }),
+          complete: () => host.report(msg.id, 'complete'),
+          error: host.errorHandler(msg)
+        });
+        break;
+      case 'stop':
+        await meld.close();
+        host.report(msg.id, 'stopped');
+        process.exit(0);
+        break;
+      default:
+        host.reportError(msg.id, `No handler for ${msg['@type']}`);
+    }
+  } catch (e) {
+    host.reportError(msg.id, e);
+  }
+}
