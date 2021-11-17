@@ -76,12 +76,6 @@ exports.handler = async argv => {
       // Start the m-ld clone
       const meld = await clone(backend, remotes, argv);
       host.report('start', 'started', { '@id': argv['@id'] });
-      // Report status messages
-      meld.status.subscribe({
-        next: status => host.report('start', 'status', status),
-        complete: () => host.report('start', 'closed'),
-        error: err => host.reportError('start', err)
-      });
       // Attach listeners for parent process commands
       process.on('message', msg => handleHostMessage(meld, msg));
     } catch (e) {
@@ -99,6 +93,9 @@ exports.handler = async argv => {
 async function handleHostMessage(meld, msg) {
   try {
     switch (msg['@type']) {
+      case 'status':
+        host.report(msg.id, 'status', meld.status.value);
+        break;
       case 'read':
         meld.read(msg.jrql).subscribe({
           next: subject => host.report(msg.id, 'next', { subject }),

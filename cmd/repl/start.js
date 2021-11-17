@@ -13,7 +13,7 @@ const { join } = require('path');
  */
 module.exports = (ctx) => ({
   command: 'start [@domain]',
-  describe: 'Start a clone process',
+  describe: 'Start a clone',
   // Help is provided by the child process (../start.js)
   builder: yargs => yargs.help(false),
   handler: () => {

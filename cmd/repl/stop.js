@@ -1,17 +1,18 @@
+const { Proc } = require('../../lib/Proc');
+
 /**
  * @typedef {import('yargs')} yargs
  * @typedef {import('index').ReplCmdContext} ReplCmdContext
  * @typedef {{ '@id': string }} StopOpts
  */
 
-const { Proc } = require('../../lib/Proc');
 /**
  * @param {ReplCmdContext} ctx
  * @returns {yargs.CommandModule<{}, StopOpts>}
  */
 module.exports = (ctx) => ({
   command: 'stop [@id]',
-  describe: 'Stops a clone process',
+  describe: 'Stops a clone',
   builder: yargs => yargs
     .option('@id', ctx.clones.cloneIdOption('stop')),
   handler: argv => {

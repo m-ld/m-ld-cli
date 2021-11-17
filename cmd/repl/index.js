@@ -96,11 +96,13 @@ class Index {
       stdin, args, proc: null
     };
     try {
+      // noinspection JSCheckFunctionSignatures
       yargs(args)
         .scriptName(PROMPT)
         .exitProcess(false)
         .command(require('./file')(ctx))
         .command(require('./start')(ctx))
+        .command(require('./status')(ctx))
         .command(require('./read')(ctx))
         .command(require('./write')(ctx))
         .command(require('./stop')(ctx))
