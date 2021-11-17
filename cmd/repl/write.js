@@ -1,6 +1,7 @@
 const { Readable, Writable, pipeline } = require('stream');
 const { Proc } = require('../../lib/Proc');
 const JSONStream = require('JSONStream');
+const getStream = require('get-stream');
 
 /**
  * @typedef {import('yargs')} yargs
@@ -21,7 +22,11 @@ module.exports = (ctx) => ({
       demandOption: ctx.stdin == null
     })
     .option('@id', ctx.clones.cloneIdOption('write'))
-    .default('path', '*'),
+    .option('path', {
+      default: '$',
+      describe: 'JSONPath to pick out data from the input.\n' +
+        'For example, to transact each item of an array, use \'*\''
+    }),
   /** @param {WriteOpts} argv */
   handler: argv => {
     ctx.proc = new WriteCloneProc(ctx, argv['@id'], argv.jrql, argv.path);
@@ -37,10 +42,23 @@ class WriteCloneProc extends Proc {
    */
   constructor(ctx, cloneId, jrql, path) {
     super();
+    const cloneWriter = new CloneWriter(ctx.cmdId, ctx.clones.get(cloneId));
+    if (path === '$') {
+      this.writeOne(ctx, jrql, cloneWriter).catch(this.setDone);
+    } else {
+      pipeline(
+        jrql ? Readable.from([arrayJsonString(jrql)]) : ctx.stdin,
+        JSONStream.parse(path),
+        cloneWriter,
+        err => this.setDone(err));
+    }
+  }
+
+  async writeOne(ctx, jrql, cloneWriter) {
+    const json = JSON.parse(jrql || await getStream(ctx.stdin));
     pipeline(
-      jrql ? Readable.from([arrayJsonString(jrql)]) : ctx.stdin,
-      JSONStream.parse(path),
-      new CloneWriter(ctx.cmdId, ctx.clones.get(cloneId)),
+      Readable.from([json]),
+      cloneWriter,
       err => this.setDone(err));
   }
 }

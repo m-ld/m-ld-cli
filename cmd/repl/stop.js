@@ -27,12 +27,16 @@ class StopCloneProc extends Proc {
   constructor(ctx, cloneId) {
     const clone = ctx.clones.get(cloneId);
     super(clone.stdout, clone.stderr);
-    ctx.clones.stop(clone).then(this.setDone, err => this.setDone(err));
-    clone.on('message', msg => {
+    const messageHandler = msg => {
       switch (msg['@type']) {
         case 'stopped':
           this.emit('message', msg);
       }
-    });
+    };
+    clone.on('message', messageHandler);
+    ctx.clones.stop(clone)
+      .then(this.setDone, err => this.setDone(err))
+      // Prevent event handler leakage
+      .then(() => clone.off('message', messageHandler));
   }
 }

@@ -38,7 +38,7 @@ class ReadCloneProc extends Proc {
     super(new Readable({ read: () => {} }));
     const clone = ctx.clones.get(cloneId);
     let first = true;
-    clone.on('message', msg => {
+    const messageHandler = msg => {
       if (msg.cmdId === ctx.cmdId) {
         switch (msg['@type']) {
           case 'next':
@@ -58,16 +58,23 @@ class ReadCloneProc extends Proc {
             this.stdout.destroy(msg.err);
         }
       }
-    });
+    };
+    clone.on('message', messageHandler);
     this.stdout
-      .on('close', () => this.setDone())
+      .on('close', () => {
+        // Prevent event handler leakage
+        clone.off('message', messageHandler);
+        this.setDone();
+      })
       .on('error', err => this.setDone(err));
-    (async () => {
-      clone.send({
-        id: ctx.cmdId,
-        '@type': 'read',
-        jrql: JSON.parse(jrql || await getStream(ctx.stdin))
-      });
-    })().catch(this.setDone);
+    this.sendRead(ctx, jrql, clone).catch(this.setDone);
+  }
+
+  async sendRead(ctx, jrql, clone) {
+    clone.send({
+      id: ctx.cmdId,
+      '@type': 'read',
+      jrql: JSON.parse(jrql || await getStream(ctx.stdin))
+    });
   }
 }
