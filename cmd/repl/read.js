@@ -21,7 +21,7 @@ module.exports = (ctx) => ({
       describe: 'Query in json-rql (TIP: use single quotes)',
       demandOption: ctx.stdin == null
     })
-    .option('@id', ctx.clones.cloneIdOption('read')),
+    .option('@id', ctx.childProcs.childIdOption('read')),
   /** @param {ReadOpts} argv */
   handler: argv => {
     ctx.proc = new ReadCloneProc(ctx, argv['@id'], argv.jrql);
@@ -36,7 +36,7 @@ class ReadCloneProc extends Proc {
    */
   constructor(ctx, cloneId, jrql) {
     super(new Readable({ read: () => {} }));
-    const clone = ctx.clones.get(cloneId);
+    const clone = ctx.childProcs.get(cloneId);
     let first = true;
     const messageHandler = msg => {
       if (msg.cmdId === ctx.cmdId) {

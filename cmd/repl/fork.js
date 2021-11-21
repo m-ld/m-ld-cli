@@ -1,6 +1,6 @@
 const { Proc } = require('../../lib/Proc');
 const { fork } = require('child_process');
-const { join } = require('path');
+const cmds = require('../cmds.json');
 
 /**
  * @typedef {import('yargs')} yargs
@@ -9,36 +9,38 @@ const { join } = require('path');
 
 /**
  * @param {ReplCmdContext} ctx
+ * @param {string} command A top-level command from the parent folder
  * @returns {yargs.CommandModule<{}, {}>}
  */
-module.exports = (ctx) => ({
-  command: 'start [@domain]',
-  describe: 'Start a clone',
-  // Help is provided by the child process (../start.js)
+module.exports = (ctx, command) => ({
+  ...cmds[command],
+  // Help is provided by the child process
   builder: yargs => yargs.help(false),
   handler: () => {
-    ctx.proc = new StartCloneProc(ctx);
+    ctx.proc = new ForkProc(ctx);
   }
 });
 
-class StartCloneProc extends Proc {
+class ForkProc extends Proc {
   /**
    * @param {ReplCmdContext} ctx
    */
   constructor(ctx) {
-    const clone = fork(
-      join(__dirname, '../..', 'index.js'),
-      ctx.args,
+    const childProcess = fork(
+      require.resolve('../../index'), ctx.args,
       { stdio: [ctx.stdin, null, null, 'ipc'] });
-    super(clone.stdout, clone.stderr);
+    super(childProcess.stdout, childProcess.stderr);
     // We hope that 'started' will arrive before 'exit'
-    clone.once('exit', () => this.setDone());
-    clone.once('error', err => this.setDone(err));
-    clone.once('message', msg => {
+    childProcess.once('exit', () => this.setDone());
+    childProcess.once('error', err => this.setDone(err));
+    childProcess.once('message', msg => {
       switch (msg['@type']) {
         case 'started':
           this.emit('message', msg);
-          ctx.clones.add(msg['@id'], clone);
+          if (msg['@id'] != null)
+            ctx.childProcs.add(msg['@id'], childProcess);
+          if (typeof msg.env == 'object')
+            Object.assign(process.env, msg.env);
           this.setDone();
           break;
         case 'error':
@@ -50,3 +52,4 @@ class StartCloneProc extends Proc {
     });
   }
 }
+

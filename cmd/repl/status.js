@@ -14,7 +14,7 @@ module.exports = (ctx) => ({
   command: 'status [@id]',
   describe: 'Interrogates the status of a clone',
   builder: yargs => yargs
-    .option('@id', ctx.clones.cloneIdOption('status')),
+    .option('@id', ctx.childProcs.childIdOption('status')),
   handler: argv => {
     ctx.proc = new StatusCloneProc(ctx, argv['@id']);
   }
@@ -26,7 +26,7 @@ class StatusCloneProc extends Proc {
    * @param {string} cloneId
    */
   constructor(ctx, cloneId) {
-    const clone = ctx.clones.get(cloneId);
+    const clone = ctx.childProcs.get(cloneId);
     super();
     const messageHandler = msg => {
       if (msg.cmdId === ctx.cmdId && msg['@type'] === 'status') {

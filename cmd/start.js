@@ -1,8 +1,10 @@
 const { uuid, clone, MeldClone } = require('@m-ld/m-ld');
 const { loadWrtcConfig } = require('@m-ld/io-web-runtime/dist/server/xirsys');
-const { AblyRemotes } = require('@m-ld/m-ld/dist/ably');
 const { WrtcPeering } = require('@m-ld/m-ld/dist/wrtc');
+const { AblyRemotes } = require('@m-ld/m-ld/dist/ably');
+const { IoRemotes } = require('@m-ld/m-ld/dist/socket.io');
 const host = require('../lib/host');
+const REMOTES = ['ably', 'io'];
 
 /** @typedef { import('@m-ld/m-ld/dist/ably').MeldAblyConfig } MeldAblyConfig */
 /** @typedef { import('@m-ld/m-ld/dist/wrtc').MeldWrtcConfig } MeldWrtcConfig */
@@ -14,8 +16,7 @@ const host = require('../lib/host');
  *    dryRun: boolean
  *  }} StartConfig */
 
-exports.command = 'start [@domain]';
-exports.describe = 'start a clone process';
+Object.assign(exports, require('./cmds.json').start);
 
 /**
  * @param {import('yargs/yargs').Argv} yargs
@@ -35,6 +36,10 @@ exports.builder = yargs => yargs
     choices: ['leveldown', 'memdown'],
     default: 'memdown'
   })
+  .option('remotes', {
+    describe: 'Remotes (messaging) type to use',
+    choices: REMOTES
+  })
   .default('logLevel', process.env.LOG)
   .normalize('dataDir')
   .config()
@@ -43,8 +48,8 @@ exports.builder = yargs => yargs
   .check(argv => {
     if (argv.backend === 'leveldown' && argv.dataDir == null)
       throw new Error('leveldown backend must have a dataDir');
-    if (argv.ably == null)
-      throw new Error('remotes must be one of [ably]');
+    if (argv[argv.remotes] == null)
+      throw new Error(`no configuration specified for ${argv.remotes}`);
     return true;
   });
 
@@ -56,67 +61,78 @@ exports.handler = async argv => {
   if (argv.dryRun) {
     host.report('start', 'config', argv);
   } else {
-    try {
-      // Load WRTC config from Xirsys if available
-      let peering;
-      if (argv.xirsys)
-        argv.wrtc = await loadWrtcConfig(argv.xirsys);
-      if (argv.wrtc)
-        peering = new WrtcPeering(argv);
-      // Infer the remotes type from the configuration
-      let remotes;
-      if (argv.ably)
-        remotes = new AblyRemotes(argv, { peering });
-      // Create the backend
-      let backend;
-      if (argv.backend === 'memdown')
-        backend = (require('memdown'))();
-      else if (argv.backend === 'leveldown')
-        backend = (require('leveldown'))(argv.dataDir);
-      // Start the m-ld clone
-      const meld = await clone(backend, remotes, argv);
-      host.report('start', 'started', { '@id': argv['@id'] });
-      // Attach listeners for parent process commands
-      process.on('message', msg => handleHostMessage(meld, msg));
-    } catch (e) {
-      host.reportError('start', e);
-    }
+    new MeldApp(argv).initialise().catch(e => host.reportError('start', e));
   }
 };
 
-/**
- *
- * @param {MeldClone} meld
- * @param {object} msg
- * @returns {Promise<void>}
- */
-async function handleHostMessage(meld, msg) {
-  try {
-    switch (msg['@type']) {
-      case 'status':
-        host.report(msg.id, 'status', meld.status.value);
-        break;
-      case 'read':
-        meld.read(msg.jrql).subscribe({
-          next: subject => host.report(msg.id, 'next', { subject }),
-          complete: () => host.report(msg.id, 'complete'),
-          error: host.errorHandler(msg)
-        });
-        break;
-      case 'write':
-        meld.write(msg.jrql)
-          .then(() => host.report(msg.id, 'complete'))
-          .catch(host.errorHandler(msg));
-        break;
-      case 'stop':
-        await meld.close();
-        host.report(msg.id, 'stopped');
-        process.exit(0);
-        break;
-      default:
-        host.reportError(msg.id, `No handler for ${msg['@type']}`);
+class MeldApp {
+  constructor(argv) {
+    this.config = argv;
+    this.meta = { '@id': this.config['@id'] };
+  }
+
+  async initialise() {
+    // Load WRTC config from Xirsys if available
+    let peering;
+    if (this.config.xirsys)
+      this.config.wrtc = await loadWrtcConfig(this.config.xirsys);
+    if (this.config.wrtc)
+      peering = new WrtcPeering(this.config);
+    // Infer the remotes type from the configuration
+    let remotes;
+    // Find the first type requested, or for which configuration exists
+    const remotesType = REMOTES.find(type => this.config.remotes === type) ||
+      REMOTES.find(type => this.config[type] != null);
+    if (remotesType === 'ably')
+      remotes = new AblyRemotes(this.config, { peering });
+    else if (remotesType === 'io')
+      remotes = new IoRemotes(this.config);
+    // Create the backend
+    let backend;
+    if (this.config.backend === 'memdown')
+      backend = (require('memdown'))();
+    else if (this.config.backend === 'leveldown')
+      backend = (require('leveldown'))(this.config.dataDir);
+    // Start the m-ld clone
+    const meld = await clone(backend, remotes, this.config);
+    host.report('start', 'started', this.meta);
+    // Attach listeners for parent process commands
+    process.on('message', msg => this.handleHostMessage(meld, msg));
+  }
+
+  /**
+   *
+   * @param {MeldClone} meld
+   * @param {object} msg
+   * @returns {Promise<void>}
+   */
+  async handleHostMessage(meld, msg) {
+    try {
+      switch (msg['@type']) {
+        case 'status':
+          host.report(msg.id, 'status', meld.status.value);
+          break;
+        case 'read':
+          meld.read(msg.jrql).subscribe({
+            next: subject => host.report(msg.id, 'next', { subject }),
+            complete: () => host.report(msg.id, 'complete'),
+            error: host.errorHandler(msg)
+          });
+          break;
+        case 'write':
+          await meld.write(msg.jrql);
+          host.report(msg.id, 'complete');
+          break;
+        case 'stop':
+          await meld.close();
+          host.report(msg.id, 'stopped', this.meta);
+          process.exit(0);
+          break;
+        default:
+          host.reportError(msg.id, `No handler for ${msg['@type']}`);
+      }
+    } catch (e) {
+      host.reportError(msg.id, e);
     }
-  } catch (e) {
-    host.reportError(msg.id, e);
   }
 }

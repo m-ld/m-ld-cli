@@ -1,0 +1,10 @@
+{
+  "start": {
+    "command": "start [@domain]",
+    "describe": "start a clone process"
+  },
+  "io": {
+    "command": "io [port]",
+    "describe": "start a Socket.io server process"
+  }
+}

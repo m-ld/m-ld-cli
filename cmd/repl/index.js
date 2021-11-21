@@ -22,7 +22,7 @@ exports.handler = () => new Index().start();
 
 /**
  * @typedef {object} ReplCmdContext
- * @property {Clones} clones
+ * @property {ChildProcs} childProcs
  * @property {string} cmdId
  * @property {Readable} stdin
  * @property {string[]} args
@@ -36,8 +36,8 @@ class Index {
       output: process.stdout,
       prompt: `${PROMPT} `
     });
-    // Running clone processes
-    this.clones = new Clones;
+    // Running child processes
+    this.childProcs = new ChildProcs;
     let cmdId = 0;
     this.nextCmdId = () => `${cmdId++}`;
   }
@@ -91,7 +91,7 @@ class Index {
    */
   exec(args, stdin) {
     const ctx = /**@type {ReplCmdContext}*/{
-      clones: this.clones,
+      childProcs: this.childProcs,
       cmdId: this.nextCmdId(),
       stdin, args, proc: null
     };
@@ -101,7 +101,8 @@ class Index {
         .scriptName(PROMPT)
         .exitProcess(false)
         .command(require('./file')(ctx))
-        .command(require('./start')(ctx))
+        .command(require('./fork')(ctx, 'io'))
+        .command(require('./fork')(ctx, 'start'))
         .command(require('./status')(ctx))
         .command(require('./read')(ctx))
         .command(require('./write')(ctx))
@@ -109,11 +110,15 @@ class Index {
         .command('exit', 'Exit this REPL', yargs => yargs, () => {
           this.close().catch(console.error);
         })
+        .fail((msg, err, yargs) => {
+          console.log(msg);
+          yargs.showHelp();
+        })
         .parseSync();
+      return ctx.proc;
     } catch (e) {
-      // Ignore error since this help will be provided by Yargs
+      console.trace(e);
     }
-    return ctx.proc;
   }
 
   streamLines(input, handler) {
@@ -123,54 +128,8 @@ class Index {
   }
 
   async close() {
-    await this.clones.close();
+    await this.childProcs.close();
     this.rl.close();
-  }
-}
-
-class Clones {
-  constructor() {
-    /** @type {Map<string, ChildProcess>} */
-    this._clones = new Map;
-  }
-
-  get(cloneId) {
-    return this._clones.get(cloneId);
-  }
-
-  add(cloneId, clone) {
-    this._clones.set(cloneId, clone);
-    clone.on('exit', () => this._clones.delete(cloneId));
-  }
-
-  cloneIdOption(verb) {
-    const option = /**@type {yargs.Options}*/{
-      describe: 'The @id of the clone to ' + verb,
-      coerce: cloneId => {
-        if (!this._clones.has(cloneId))
-          throw new Error(`Clone ${cloneId} not found`);
-        return cloneId;
-      }
-    };
-    if (this._clones.size === 1)
-      option.default = this._clones.keys().next().value;
-    else
-      option.demandOption = true;
-    return option;
-  }
-
-  /** @param {ChildProcess} clone */
-  stop(clone) {
-    return new Promise((resolve, reject) => {
-      clone.send({ id: 'stop', '@type': 'stop' });
-      clone.once('exit', resolve);
-      clone.once('error', reject);
-    });
-  }
-
-  async close() {
-    for (let child of this._clones.values())
-      await this.stop(child);
   }
 }
 
@@ -254,5 +213,54 @@ class BiProc extends Proc {
       .then(() => this.setDone(), this.setDone);
     left.on('message', msg => this.emit('message', msg));
     right.on('message', msg => this.emit('message', msg));
+  }
+}
+
+class ChildProcs {
+  constructor() {
+    /** @type {Map<string, ChildProcess>} */
+    this._children = new Map;
+  }
+
+  get(childId) {
+    return this._children.get(childId);
+  }
+
+  add(childId, childProcess) {
+    this._children.set(childId, childProcess);
+    childProcess.on('exit', () => this._children.delete(childId));
+  }
+
+  childIdOption(verb) {
+    // noinspection JSUnusedGlobalSymbols
+    const option = /**@type {yargs.Options}*/{
+      describe: `The @id of the process to ${verb}`,
+      coerce: childId => {
+        if (!this._children.has(childId))
+          throw new Error(`Process ${childId} not found`);
+        return childId;
+      }
+    };
+    if (this._children.size === 0) {
+      option.demandOption = true;
+    } else {
+      for (let childId of this._children.keys())
+        option.default = childId;
+    }
+    return option;
+  }
+
+  /** @param {ChildProcess} childProcess */
+  stop(childProcess) {
+    return new Promise((resolve, reject) => {
+      childProcess.send({ id: 'stop', '@type': 'stop' });
+      childProcess.once('exit', resolve);
+      childProcess.once('error', reject);
+    });
+  }
+
+  async close() {
+    for (let childProcess of this._children.values())
+      await this.stop(childProcess);
   }
 }

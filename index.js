@@ -8,5 +8,6 @@ const { hideBin } = require('yargs/helpers');
 yargs(hideBin(process.argv))
   .command(require('./cmd/repl'))
   .command(require('./cmd/start'))
+  .command(require('./cmd/io'))
   .help()
   .parse();

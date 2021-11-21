@@ -21,7 +21,7 @@ module.exports = (ctx) => ({
       describe: 'Update in json-rql (TIP: use single quotes)',
       demandOption: ctx.stdin == null
     })
-    .option('@id', ctx.clones.cloneIdOption('write'))
+    .option('@id', ctx.childProcs.childIdOption('write'))
     .option('path', {
       default: '$',
       describe: 'JSONPath to pick out data from the input.\n' +
@@ -42,7 +42,7 @@ class WriteCloneProc extends Proc {
    */
   constructor(ctx, cloneId, jrql, path) {
     super();
-    const cloneWriter = new CloneWriter(ctx.cmdId, ctx.clones.get(cloneId));
+    const cloneWriter = new CloneWriter(ctx.cmdId, ctx.childProcs.get(cloneId));
     if (path === '$') {
       this.writeOne(ctx, jrql, cloneWriter).catch(this.setDone);
     } else {
