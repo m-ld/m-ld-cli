@@ -1,0 +1,6 @@
+{
+  "@id": "{{datatype.uuid}}",
+  "firstName": "{{name.firstName}}",
+  "lastName": "{{name.lastName}}",
+  "phone": "{{phone.phoneNumber}}"
+}
