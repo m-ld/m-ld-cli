@@ -42,6 +42,7 @@
   "devDependencies": {
     "@types/merge-stream": "^1.1.2",
     "@types/shell-quote": "^1.7.1",
-    "@types/yargs": "^17.0.5"
+    "@types/yargs": "^17.0.5",
+    "jest": "^27.3.1"
   }
 }

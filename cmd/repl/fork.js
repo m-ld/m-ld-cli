@@ -1,6 +1,5 @@
 const { Proc } = require('../../lib/Proc');
 const { fork } = require('child_process');
-const cmds = require('../cmds.json');
 
 /**
  * @typedef {import('yargs')} yargs
@@ -9,25 +8,30 @@ const cmds = require('../cmds.json');
 
 /**
  * @param {ReplCmdContext} ctx
- * @param {string} command A top-level command from the parent folder
+ * @param {{command: string, describe: string}} meta
  * @returns {yargs.CommandModule<{}, {}>}
  */
-module.exports = (ctx, command) => ({
-  ...cmds[command],
-  // Help is provided by the child process
-  builder: yargs => yargs.help(false),
-  handler: () => {
-    ctx.proc = new ForkProc(ctx);
+module.exports = (ctx, meta) => ({
+  ...meta,
+  builder: yargs => yargs
+    .help(false) // Help is provided by the child process
+    .option('modulePath', {
+      hidden: true, // This is only an option for testing
+      default: require.resolve('../../index')
+    }),
+  handler: ({ modulePath }) => {
+    ctx.proc = new ForkProc(modulePath, ctx);
   }
 });
 
 class ForkProc extends Proc {
   /**
+   * @param {string} modulePath
    * @param {ReplCmdContext} ctx
    */
-  constructor(ctx) {
+  constructor(modulePath, ctx) {
     const childProcess = fork(
-      require.resolve('../../index'), ctx.args,
+      modulePath, ctx.args,
       { stdio: [ctx.stdin, null, null, 'ipc'] });
     super(childProcess.stdout, childProcess.stderr);
     // We hope that 'started' will arrive before 'exit'

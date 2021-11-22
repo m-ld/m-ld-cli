@@ -48,7 +48,7 @@ exports.builder = yargs => yargs
   .check(argv => {
     if (argv.backend === 'leveldown' && argv.dataDir == null)
       throw new Error('leveldown backend must have a dataDir');
-    if (argv[argv.remotes] == null)
+    if (argv.remotes != null && argv[argv.remotes] == null)
       throw new Error(`no configuration specified for ${argv.remotes}`);
     return true;
   });
