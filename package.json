@@ -4,7 +4,7 @@
   "description": "m-ld Node.js terminal app for local persistence & data loading",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -43,6 +43,7 @@
     "@types/merge-stream": "^1.1.2",
     "@types/shell-quote": "^1.7.1",
     "@types/yargs": "^17.0.5",
-    "jest": "^27.3.1"
+    "jest": "^27.3.1",
+    "tmp": "^0.2.1"
   }
 }

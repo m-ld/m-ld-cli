@@ -51,6 +51,9 @@ class WriteFileProc extends Proc {
     const fileOut = fs.createWriteStream(filePath);
     // As soon as the stream is open, we are done
     fileOut.on('open', () => this.setDone());
-    pipeline(stdin, fileOut, err => err && this.setDone(err));
+    pipeline(stdin, fileOut, err => {
+      err && this.setDone(err);
+      this.emit('exit', 0);
+    });
   }
 }
