@@ -1,0 +1,1 @@
+process.send({ '@type': 'error', err: 'boom' });
