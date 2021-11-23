@@ -35,6 +35,7 @@ class ReadCloneProc extends Proc {
    * @param {string} [jrql]
    */
   constructor(ctx, cloneId, jrql) {
+    // TODO: Use a dedicated output pipe with backpressure
     super(new Readable({ read: () => {} }));
     const clone = ctx.childProcs.get(cloneId);
     let first = true;

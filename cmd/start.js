@@ -1,4 +1,4 @@
-const { uuid, clone, MeldClone } = require('@m-ld/m-ld');
+const { uuid, clone } = require('@m-ld/m-ld');
 const { loadWrtcConfig } = require('@m-ld/io-web-runtime/dist/server/xirsys');
 const { WrtcPeering } = require('@m-ld/m-ld/dist/wrtc');
 const { AblyRemotes } = require('@m-ld/m-ld/dist/ably');
@@ -28,7 +28,7 @@ exports.builder = yargs => yargs
   .string('@domain')
   .option('genesis', {
     boolean: true,
-    describe: 'Set to indicate that this clone will be \'genesis\'; ' +
+    describe: 'Set to indicate that this clone will be "genesis"; ' +
       'that is, the first new clone on a new domain'
   })
   .option('backend', {
@@ -61,70 +61,81 @@ exports.handler = async argv => {
   if (argv.dryRun) {
     host.report('start', 'config', argv);
   } else {
-    new MeldApp(argv).initialise().catch(e => host.reportError('start', e));
+    new MeldChildApp(argv).start()
+      .catch(e => host.reportError('start', e));
   }
 };
 
-class MeldApp {
-  constructor(argv) {
-    this.config = argv;
+class MeldChildApp {
+  constructor(config) {
+    this.config = config;
     this.meta = { '@id': this.config['@id'] };
+    this.backend = this.createBackend();
+    this.remotes = this.createRemotes();
   }
 
-  async initialise() {
-    // Load WRTC config from Xirsys if available
-    let peering;
-    if (this.config.xirsys)
-      this.config.wrtc = await loadWrtcConfig(this.config.xirsys);
-    if (this.config.wrtc)
-      peering = new WrtcPeering(this.config);
-    // Infer the remotes type from the configuration
-    let remotes;
+  async createRemotes() {
     // Find the first type requested, or for which configuration exists
     const remotesType = REMOTES.find(type => this.config.remotes === type) ||
       REMOTES.find(type => this.config[type] != null);
     if (remotesType === 'ably')
-      remotes = new AblyRemotes(this.config, { peering });
+      return new AblyRemotes(this.config, { peering: await this.createPeering() });
     else if (remotesType === 'io')
-      remotes = new IoRemotes(this.config);
-    // Create the backend
-    let backend;
+      return new IoRemotes(this.config);
+    else
+      throw new Error('Remotes not specified or not supported');
+  }
+
+  async createPeering() {
+    // Load WRTC config from Xirsys if available
+    if (this.config.xirsys)
+      this.config.wrtc = await loadWrtcConfig(this.config.xirsys);
+    if (this.config.wrtc)
+      return new WrtcPeering(this.config);
+    // Otherwise undefined
+  }
+
+  createBackend() {
     if (this.config.backend === 'memdown')
-      backend = (require('memdown'))();
+      return (require('memdown'))();
     else if (this.config.backend === 'leveldown')
-      backend = (require('leveldown'))(this.config.dataDir);
+      return (require('leveldown'))(this.config.dataDir);
+    else
+      throw new Error('Backend not specified or not supported');
+  }
+
+  async start() {
     // Start the m-ld clone
-    const meld = await clone(backend, remotes, this.config);
+    this.meld = await clone(this.backend, await this.remotes, this.config);
     host.report('start', 'started', this.meta);
     // Attach listeners for parent process commands
-    process.on('message', msg => this.handleHostMessage(meld, msg));
+    process.on('message', msg => this.handleHostMessage(msg));
   }
 
   /**
    *
-   * @param {MeldClone} meld
    * @param {object} msg
    * @returns {Promise<void>}
    */
-  async handleHostMessage(meld, msg) {
+  async handleHostMessage(msg) {
     try {
       switch (msg['@type']) {
         case 'status':
-          host.report(msg.id, 'status', meld.status.value);
+          host.report(msg.id, 'status', this.meld.status.value);
           break;
         case 'read':
-          meld.read(msg.jrql).subscribe({
+          this.meld.read(msg.jrql).subscribe({
             next: subject => host.report(msg.id, 'next', { subject }),
             complete: () => host.report(msg.id, 'complete'),
             error: host.errorHandler(msg)
           });
           break;
         case 'write':
-          await meld.write(msg.jrql);
+          await this.meld.write(msg.jrql);
           host.report(msg.id, 'complete');
           break;
         case 'stop':
-          await meld.close();
+          await this.meld.close();
           host.report(msg.id, 'stopped', this.meta);
           process.exit(0);
           break;
