@@ -26,8 +26,9 @@ exports.handler = argv => {
   // Create and run an HTTP server for Express and Socket.io
   const httpServer = require('http').createServer();
   httpServer.listen(argv.port, () => {
+    const port = httpServer.address().port;
     host.report('start', 'started', {
-      ...meta, env: { CLI_IO__URI: `http://localhost:${argv.port}` }
+      ...meta, port, env: { CLI_IO__URI: `http://localhost:${port}` }
     });
   });
 

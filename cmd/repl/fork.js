@@ -31,7 +31,7 @@ class ForkProc extends Proc {
   constructor(modulePath, ctx) {
     const childProcess = fork(
       modulePath, ctx.args,
-      { stdio: [ctx.stdin, null, null, 'ipc'] });
+      { stdio: [ctx.stdin, null, null, 'ipc'], env: process.env });
     super(childProcess.stdout, childProcess.stderr);
     // We hope that 'started' will arrive before 'exit'
     childProcess.once('exit', () => this.setDone());

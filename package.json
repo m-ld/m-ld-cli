@@ -20,6 +20,9 @@
     "url": "https://github.com/m-ld/m-ld-cli/issues"
   },
   "homepage": "https://github.com/m-ld/m-ld-cli#readme",
+  "bin": {
+    "m-ld": "./index.js"
+  },
   "dependencies": {
     "@m-ld/io-web-runtime": "^0.2.0-0",
     "@m-ld/m-ld": "^0.7.1-3",

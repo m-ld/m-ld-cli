@@ -70,7 +70,7 @@ describe('Command line executor', () => {
       }
     })('TEST');
     const exec = cmdLine.execute('bunkum', jest.fn(), jest.fn());
-    await expect(Promise.race([exec, Promise.resolve('not done')]))
+    await expect(Promise.race([exec, 'not done']))
       .resolves.toBe('not done');
     trigger.emit('pull');
     await exec;
