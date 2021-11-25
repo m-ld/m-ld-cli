@@ -18,7 +18,7 @@ describe('File command', () => {
   });
 
   test('Writes to a file', done => {
-    const ctx = /**@type {ReplCmdContext}*/{
+    const ctx = /**@type {CmdContext}*/{
       childProcs: new ChildProcs,
       cmdId: '1',
       args: [tmpFileName],
@@ -39,7 +39,7 @@ describe('File command', () => {
   });
 
   test('Reads from a file', async () => {
-    const ctx = /**@type {ReplCmdContext}*/{
+    const ctx = /**@type {CmdContext}*/{
       childProcs: new ChildProcs,
       cmdId: '1',
       args: [tmpFileName],

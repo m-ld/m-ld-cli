@@ -3,11 +3,10 @@ const { fork } = require('child_process');
 
 /**
  * @typedef {import('yargs')} yargs
- * @typedef {import('index').ReplCmdContext} ReplCmdContext
  */
 
 /**
- * @param {ReplCmdContext} ctx
+ * @param {CmdContext} ctx
  * @param {{command: string, describe: string}} meta
  * @returns {yargs.CommandModule<{}, {}>}
  */
@@ -27,7 +26,7 @@ module.exports = (ctx, meta) => ({
 class ForkProc extends Proc {
   /**
    * @param {string} modulePath
-   * @param {ReplCmdContext} ctx
+   * @param {CmdContext} ctx
    */
   constructor(modulePath, ctx) {
     const childProcess = fork(

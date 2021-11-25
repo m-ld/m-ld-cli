@@ -1,15 +1,14 @@
 const fs = require('fs');
 const { pipeline } = require('stream');
-const { Proc } = require('../../lib/Proc');
+const { Proc, SyncProc } = require('../../lib/Proc');
 
 /**
  * @typedef {import('yargs')} yargs
- * @typedef {import('index').ReplCmdContext} ReplCmdContext
  * @typedef {{ file: string }} FileOpts
  */
 
 /**
- * @param {ReplCmdContext} ctx
+ * @param {CmdContext} ctx
  * @returns {yargs.CommandModule<{}, FileOpts>}
  */
 module.exports = (ctx) => ({
@@ -29,15 +28,12 @@ module.exports = (ctx) => ({
   }
 });
 
-class ReadFileProc extends Proc {
+class ReadFileProc extends SyncProc {
   /**
    * @param {string} filePath
    */
   constructor(filePath) {
     super(fs.createReadStream(filePath));
-    this.stdout
-      .on('close', () => this.setDone())
-      .on('error', err => this.setDone(err));
   }
 }
 

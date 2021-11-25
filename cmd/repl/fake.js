@@ -1,16 +1,15 @@
-const { Proc } = require('../../lib/Proc');
+const { SyncProc } = require('../../lib/Proc');
 const { Readable } = require('stream');
 const getStream = require('get-stream');
 const faker = require('faker');
 
 /**
  * @typedef {import('yargs')} yargs
- * @typedef {import('index').ReplCmdContext} ReplCmdContext
  * @typedef {{ input?: string, count: number, seed?: number }} FakerOpts
  */
 
 /**
- * @param {ReplCmdContext} ctx
+ * @param {CmdContext} ctx
  * @returns {yargs.CommandModule<{}, FakerOpts>}
  */
 module.exports = (ctx) => ({
@@ -32,14 +31,11 @@ module.exports = (ctx) => ({
   }
 });
 
-class FakerProc extends Proc {
+class FakerProc extends SyncProc {
   constructor(ctx, argv) {
     super(new FakerStream(
       argv.input || getStream(ctx.stdin),
       argv.count, argv.seed));
-    this.stdout
-      .on('close', () => this.setDone())
-      .on('error', err => this.setDone(err));
   }
 }
 

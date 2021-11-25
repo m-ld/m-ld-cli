@@ -5,12 +5,11 @@ const stringify = require('json-stringify-pretty-compact');
 
 /**
  * @typedef {import('yargs')} yargs
- * @typedef {import('index').ReplCmdContext} ReplCmdContext
  * @typedef {{ jrql: string|null, '@id': string }} ReadOpts
  */
 
 /**
- * @param {ReplCmdContext} ctx
+ * @param {CmdContext} ctx
  * @returns {yargs.CommandModule<{}, ReadOpts>}
  */
 module.exports = (ctx) => ({
@@ -30,7 +29,7 @@ module.exports = (ctx) => ({
 
 class ReadCloneProc extends Proc {
   /**
-   * @param {ReplCmdContext} ctx
+   * @param {CmdContext} ctx
    * @param {string} cloneId
    * @param {string} [jrql]
    */

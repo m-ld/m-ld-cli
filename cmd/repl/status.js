@@ -2,12 +2,11 @@ const { Proc } = require('../../lib/Proc');
 
 /**
  * @typedef {import('yargs')} yargs
- * @typedef {import('index').ReplCmdContext} ReplCmdContext
  * @typedef {{ '@id': string }} StatusOpts
  */
 
 /**
- * @param {ReplCmdContext} ctx
+ * @param {CmdContext} ctx
  * @returns {yargs.CommandModule<{}, StatusOpts>}
  */
 module.exports = (ctx) => ({
@@ -22,7 +21,7 @@ module.exports = (ctx) => ({
 
 class StatusCloneProc extends Proc {
   /**
-   * @param {ReplCmdContext} ctx
+   * @param {CmdContext} ctx
    * @param {string} cloneId
    */
   constructor(ctx, cloneId) {

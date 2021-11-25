@@ -6,7 +6,7 @@ const getStream = require('get-stream');
 
 describe('Fake command', () => {
   async function doFake(args, stdin) {
-    const ctx = /**@type {ReplCmdContext}*/{
+    const ctx = /**@type {CmdContext}*/{
       childProcs: new ChildProcs,
       cmdId: '1', args, stdin, proc: null
     };

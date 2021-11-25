@@ -5,7 +5,7 @@ const readline = require('readline');
 
 describe('Fork command', () => {
   function doFork(testScript, opts) {
-    const ctx = /**@type {ReplCmdContext}*/{
+    const ctx = /**@type {CmdContext}*/{
       childProcs: new ChildProcs,
       cmdId: '1',
       args: [testScript],

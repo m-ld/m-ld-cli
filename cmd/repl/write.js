@@ -5,12 +5,11 @@ const getStream = require('get-stream');
 
 /**
  * @typedef {import('yargs')} yargs
- * @typedef {import('index').ReplCmdContext} ReplCmdContext
  * @typedef {{ jrql: string|null, '@id': string, path: string }} WriteOpts
  */
 
 /**
- * @param {ReplCmdContext} ctx
+ * @param {CmdContext} ctx
  * @returns {yargs.CommandModule<{}, WriteOpts>}
  */
 module.exports = (ctx) => ({
@@ -35,7 +34,7 @@ module.exports = (ctx) => ({
 
 class WriteCloneProc extends Proc {
   /**
-   * @param {ReplCmdContext} ctx
+   * @param {CmdContext} ctx
    * @param {string} cloneId
    * @param {string} [jrql]
    * @param {string} path JSONPath path into the input stream
