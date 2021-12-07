@@ -4,6 +4,9 @@ const getStream = require('get-stream');
 const faker = require('faker');
 
 /**
+ * The `fake` command generates fake data using a given input template.
+ * @see http://marak.github.io/faker.js/#toc8__anchor
+ *
  * @typedef {import('yargs')} yargs
  * @typedef {{ input?: string, count: number, seed?: number }} FakerOpts
  */

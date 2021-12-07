@@ -107,6 +107,7 @@ class MeldChildApp {
   async start() {
     // Start the m-ld clone
     this.meld = await clone(this.backend, await this.remotes, this.config);
+    this.meld.status.subscribe({ error: err => host.reportError('start', err) });
     host.report('start', 'started', this.meta);
     // Attach listeners for parent process commands
     process.on('message', msg => this.handleHostMessage(msg));

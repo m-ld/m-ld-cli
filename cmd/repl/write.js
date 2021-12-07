@@ -93,8 +93,9 @@ class CloneWriter extends Writable {
   _write(jrql, encoding, callback) {
     const cmdId = this.nextCmdId();
     this.clone.send({ id: cmdId, '@type': 'write', jrql });
-    this.clone.on('message', msg => {
+    const handleMessage = msg => {
       if (msg.cmdId === cmdId) {
+        this.clone.off('message', handleMessage);
         switch (msg['@type']) {
           case 'complete':
             return callback();
@@ -102,6 +103,7 @@ class CloneWriter extends Writable {
             return callback(msg.err);
         }
       }
-    });
+    };
+    this.clone.on('message', handleMessage);
   }
 }

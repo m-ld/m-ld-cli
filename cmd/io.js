@@ -17,7 +17,7 @@ Object.assign(exports, require('./cmds.json').io);
 exports.builder = yargs => yargs
   .positional('port', {
     describe: 'Port for server',
-    default: 3000,
+    default: 0,
     type: 'number'
   });
 
