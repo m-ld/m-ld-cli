@@ -1,7 +1,6 @@
 const { uuid, clone } = require('@m-ld/m-ld');
 const { loadWrtcConfig } = require('@m-ld/io-web-runtime/dist/server/xirsys');
-const { WrtcPeering } = require('@m-ld/m-ld/dist/wrtc');
-const { AblyRemotes } = require('@m-ld/m-ld/dist/ably');
+const { AblyRemotes, AblyWrtcRemotes } = require('@m-ld/m-ld/dist/ably');
 const { IoRemotes } = require('@m-ld/m-ld/dist/socket.io');
 const host = require('../lib/host');
 const REMOTES = ['ably', 'io'];
@@ -78,30 +77,34 @@ class MeldChildApp {
     // Find the first type requested, or for which configuration exists
     const remotesType = REMOTES.find(type => this.config.remotes === type) ||
       REMOTES.find(type => this.config[type] != null);
-    if (remotesType === 'ably')
-      return new AblyRemotes(this.config, { peering: await this.createPeering() });
-    else if (remotesType === 'io')
-      return new IoRemotes(this.config);
-    else
+    if (remotesType === 'ably') {
+      if (this.config.wrtc) {
+        await this.createPeering();
+        return AblyWrtcRemotes;
+      } else {
+        return AblyRemotes;
+      }
+    } else if (remotesType === 'io') {
+      return IoRemotes;
+    } else {
       throw new Error('Remotes not specified or not supported');
+    }
   }
 
   async createPeering() {
     // Load WRTC config from Xirsys if available
     if (this.config.xirsys)
       this.config.wrtc = await loadWrtcConfig(this.config.xirsys);
-    if (this.config.wrtc)
-      return new WrtcPeering(this.config);
-    // Otherwise undefined
   }
 
   createBackend() {
-    if (this.config.backend === 'memdown')
-      return (require('memdown'))();
-    else if (this.config.backend === 'leveldown')
+    if (this.config.backend === 'memdown') {
+      return new (require('@m-ld/m-ld/dist/memdown').MeldMemDown)();
+    } else if (this.config.backend === 'leveldown') {
       return (require('leveldown'))(this.config.dataDir);
-    else
+    } else {
       throw new Error('Backend not specified or not supported');
+    }
   }
 
   async start() {

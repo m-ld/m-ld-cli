@@ -24,8 +24,8 @@
     "m-ld": "./index.js"
   },
   "dependencies": {
-    "@m-ld/io-web-runtime": "^0.2.0-0",
-    "@m-ld/m-ld": "^0.7.1-4",
+    "@m-ld/io-web-runtime": "^0.2.0",
+    "@m-ld/m-ld": "^0.8.0",
     "ably": "^1.2.14",
     "dotenv": "^10.0.0",
     "faker": "^5.5.3",
