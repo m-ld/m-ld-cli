@@ -16,5 +16,7 @@ process.on('message', msg => {
 process.send({
   cmdId: 'start',
   '@type': 'started',
-  '@id': 'echo1'
+  '@id': 'echo1',
+  // Echo the args we were started with as an environment variable
+  env: { 'ARGS': process.argv.slice(2).join(' ') }
 });

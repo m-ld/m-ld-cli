@@ -6,5 +6,9 @@
   "io": {
     "command": "io [port]",
     "describe": "start a Socket.io server process"
+  },
+  "repl": {
+    "command": ["$0", "repl"],
+    "describe": "start a m-ld REPL"
   }
 }

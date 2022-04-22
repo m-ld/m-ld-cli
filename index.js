@@ -3,9 +3,16 @@ require('dotenv').config();
 
 const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
+const { buildGlobalOpts } = require('./lib/opts');
 
 // noinspection JSCheckFunctionSignatures
-yargs(hideBin(process.argv))
+buildGlobalOpts(yargs(hideBin(process.argv)), [
+  // By default, include all extensions as options
+  './ext/memdown',
+  './ext/leveldown',
+  './ext/ably',
+  './ext/io'
+], require)
   .command(require('./cmd/repl'))
   .command(require('./cmd/start'))
   .command(require('./cmd/io'))

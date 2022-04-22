@@ -2,43 +2,48 @@ const readline = require('readline');
 const cmds = require('../cmds.json');
 const { CommandLine } = require('../../lib/CommandLine');
 
-exports.command = ['$0', 'repl'];
-exports.describe = 'start a m-ld REPL';
-
-const PROMPT = 'm-ld>';
+Object.assign(exports, require('../cmds.json').repl);
 
 /**
- * @typedef {{ logLevel:string }} ReplOpts
- * @param {yargs.Argv<ReplOpts>} yargs
- * @returns {yargs.Argv<ReplOpts>}
+ * @param {import('yargs/yargs').Argv<GlobalOpts>} yargs
+ * @returns {import('yargs/yargs').Argv<GlobalOpts>}
  */
-exports.builder = yargs => yargs
-  .default('logLevel', process.env.LOG);
+exports.builder = yargs => yargs;
 
-exports.handler = () => {
-  new Repl(process.stdin, process.stdout, console,
-    () => process.exit(0));
-};
+/**
+ * @param {GlobalOpts} argv
+ */
+exports.handler = argv => new Repl({
+  ext: argv.ext,
+  logLevel: argv.logLevel,
+  prompt: 'm-ld>',
+  input: process.stdin,
+  output: process.stdout,
+  console: console,
+  cb: () => process.exit(0)
+});
 
 class Repl extends CommandLine {
   /**
-   * @param {import('stream').Readable} input
-   * @param {import('stream').Writable} output
-   * @param {import('console').Console} console
-   * @param {() => void} cb called back on close
+   * @param {GlobalOpts} opts
+   * @param {string} opts.prompt
+   * @param {import('stream').Readable} opts.input
+   * @param {import('stream').Writable} opts.output
+   * @param {import('console').Console} opts.console
+   * @param {() => void} opts.cb called back on close
    */
-  constructor(input, output, console, cb) {
-    super(PROMPT);
+  constructor(opts) {
+    super(opts);
+    const { prompt, input, output, console, cb } = opts;
     this.rl = readline.createInterface({
-      input, output, prompt: `${PROMPT} `
+      input, output, prompt: `${prompt} `
     }).on('line', line => {
       this.rl.pause();
       this.execute(line, console.log, console.error)
         .catch(console.log)
         // We always re-prompt even if there was an error
         .finally(() => this.rl.prompt());
-    })
-      .on('close', cb);
+    }).on('close', cb);
     this.rl.prompt();
   }
 

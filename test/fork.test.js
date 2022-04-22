@@ -4,19 +4,21 @@ const fork = require('../cmd/repl/fork');
 const readline = require('readline');
 
 describe('Fork command', () => {
-  function doFork(testScript, opts) {
+  function doFork(testScript, testCtx) {
     const ctx = /**@type {CmdContext}*/{
       childProcs: new ChildProcs,
       cmdId: '1',
       args: [testScript],
       proc: null,
-      ...opts
+      opts: { ext: [{ filename: 'testExt'}] },
+      ...testCtx
     };
     const modulePath = require.resolve(`./mock-scripts/${testScript}`);
     yargs(`${testScript} --modulePath ${modulePath}`)
       .exitProcess(false)
       .command(fork(ctx, {
-        command: testScript, describe: testScript
+        command: testScript,
+        describe: testScript
       }))
       .parseSync();
     return ctx;
@@ -37,6 +39,7 @@ describe('Fork command', () => {
     // Process should now be running in the background
     const childProcess = ctx.childProcs.get('echo1');
     expect(childProcess).toBeDefined();
+    expect(process.env.ARGS).toBe('echo --ext testExt');
     // Check for message echo
     await new Promise(resolve => {
       const hello = { id: '2', '@type': 'hello' };

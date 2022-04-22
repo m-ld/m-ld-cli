@@ -26,7 +26,7 @@ describe('System test with socket.io', () => {
   let ioStart;
 
   beforeAll(async () => {
-    cmdLine = new IoCommandLine('TEST');
+    cmdLine = new IoCommandLine({ prompt: 'TEST' });
     const outLines = jest.fn();
     // Use zero port so OS assigns one
     await cmdLine.execute('io 0', outLines);

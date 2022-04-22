@@ -1,5 +1,6 @@
 const { Proc } = require('../../lib/Proc');
 const { fork } = require('child_process');
+const { optsArgs } = require('../../lib/opts');
 
 /**
  * @typedef {import('yargs')} yargs
@@ -30,7 +31,7 @@ class ForkProc extends Proc {
    */
   constructor(modulePath, ctx) {
     const childProcess = fork(
-      modulePath, ctx.args,
+      modulePath, ctx.args.concat(optsArgs(ctx.opts)),
       { stdio: [ctx.stdin, null, null, 'ipc'], env: process.env });
     super(childProcess.stdout, childProcess.stderr);
     // We hope that 'started' will arrive before 'exit'

@@ -3,16 +3,16 @@ const { IoRemotesService } = require('@m-ld/m-ld/dist/socket.io-server');
 const host = require('../lib/host');
 const { uuid } = require('@m-ld/m-ld');
 
-/** @typedef {import('yargs/yargs').Argv} Argv */
-/** @typedef {Argv & {
- *    port?: number
- *  } } IoConfig */
+/**
+ * @typedef {GlobalOpts} IoConfig
+ * @property {number} [port]
+ */
 
 Object.assign(exports, require('./cmds.json').io);
 
 /**
- * @param {Argv} yargs
- * @returns {IoConfig}
+ * @param {import('yargs/yargs').Argv} yargs
+ * @returns {import('yargs/yargs').Argv<IoConfig>}
  */
 exports.builder = yargs => yargs
   .positional('port', {
@@ -21,6 +21,9 @@ exports.builder = yargs => yargs
     type: 'number'
   });
 
+/**
+ * @param {IoConfig} argv
+ */
 exports.handler = argv => {
   const meta = { '@id': uuid() };
   // Create and run an HTTP server for Express and Socket.io

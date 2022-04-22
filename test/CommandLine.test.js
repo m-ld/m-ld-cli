@@ -4,8 +4,14 @@ const { EventEmitter } = require('events');
 const { Readable } = require('stream');
 
 describe('Command line executor', () => {
+  const testOpts = /**@type GlobalOpts*/{
+    prompt: 'TEST',
+    logLevel: 'DEBUG',
+    ext: ['ext1', 'ext2']
+  };
+  
   test('rejects undeclared command', async () => {
-    const cmdLine = new (class extends CommandLine {})('TEST');
+    const cmdLine = new (class extends CommandLine {})(testOpts);
     const outLines = jest.fn(), errLines = jest.fn();
     await cmdLine.execute('bunkum', outLines, errLines);
     // Unknown command is a user error, not a process error
@@ -20,10 +26,12 @@ describe('Command line executor', () => {
     let argv = { yes: false };
     const cmdLine = new (class extends CommandLine {
       buildCommands(yargs, ctx) {
+        expect(ctx.opts.logLevel).toBe('DEBUG');
+        expect(ctx.opts.ext).toEqual(['ext1', 'ext2']);
         return yargs.command('bunkum', 'Bunkum!',
           yargs => yargs, args => { argv = args; });
       }
-    })('TEST');
+    })(testOpts);
     const outLines = jest.fn(), errLines = jest.fn();
     await cmdLine.execute('bunkum --yes', outLines, errLines);
     // Unknown command is a user error, not a process error
@@ -38,7 +46,7 @@ describe('Command line executor', () => {
         return yargs.command('bunkum', 'Bunkum!',
           yargs => yargs, () => { throw 'error'; });
       }
-    })('TEST');
+    })(testOpts);
     await expect(cmdLine.execute('bunkum', jest.fn(), jest.fn()))
       .rejects.toBe('error');
   });
@@ -52,7 +60,7 @@ describe('Command line executor', () => {
           setImmediate(() => ctx.proc.setDone('error'));
         });
       }
-    })('TEST');
+    })(testOpts);
     await expect(cmdLine.execute('bunkum', jest.fn(), jest.fn()))
       .rejects.toBe('error');
   });
@@ -68,7 +76,7 @@ describe('Command line executor', () => {
             trigger.on('pull', () => ctx.proc.setDone());
           });
       }
-    })('TEST');
+    })(testOpts);
     const exec = cmdLine.execute('bunkum', jest.fn(), jest.fn());
     await expect(Promise.race([exec, 'not done']))
       .resolves.toBe('not done');
@@ -84,7 +92,7 @@ describe('Command line executor', () => {
             ctx.proc = new SyncProc(Readable.from(['I am a fish']));
           });
       }
-    })('TEST');
+    })(testOpts);
     const outLines = jest.fn();
     await cmdLine.execute('bunkum', outLines, jest.fn());
     expect(outLines.mock.calls).toEqual([['I am a fish']]);
@@ -102,7 +110,7 @@ describe('Command line executor', () => {
             })
           });
       }
-    })('TEST');
+    })(testOpts);
     const outLines = jest.fn();
     await cmdLine.execute('bunkum', outLines, jest.fn());
     expect(outLines.mock.calls).toEqual([['I am a tree']]);

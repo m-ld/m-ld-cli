@@ -1,28 +1,28 @@
 const { uuid, clone } = require('@m-ld/m-ld');
-const { loadWrtcConfig } = require('@m-ld/io-web-runtime/dist/server/xirsys');
-const { AblyRemotes, AblyWrtcRemotes } = require('@m-ld/m-ld/dist/ably');
-const { IoRemotes } = require('@m-ld/m-ld/dist/socket.io');
 const host = require('../lib/host');
-const REMOTES = ['ably', 'io'];
 
 /** @typedef { import('@m-ld/m-ld/dist/ably').MeldAblyConfig } MeldAblyConfig */
 /** @typedef { import('@m-ld/m-ld/dist/wrtc').MeldWrtcConfig } MeldWrtcConfig */
 /** @typedef { import('@m-ld/io-web-runtime/dist/server/xirsys').XirsysConfig } XirsysConfig */
-/** @typedef {{
- *    backend?: string,
- *    dataDir?: string,
- *    xirsys?: XirsysConfig,
- *    dryRun: boolean
- *  }} StartConfig */
+
+/**
+ * @typedef {GlobalOpts} StartConfig
+ * @property {string} [remotes]
+ * @property {string} [backend]
+ * @property {string} [dataDir]
+ * @property {XirsysConfig} [xirsys]
+ * @property {boolean} dryRun
+ */
 
 Object.assign(exports, require('./cmds.json').start);
 
 /**
- * @param {import('yargs/yargs').Argv} yargs
+ * @param {import('yargs/yargs').Argv<GlobalOpts>} yargs
  * @returns {import('yargs/yargs').Argv}
  */
 exports.builder = yargs => yargs
   .boolean('dryRun')
+  .array('ext')
   .default('@id', uuid())
   .string('@domain')
   .option('genesis', {
@@ -30,26 +30,21 @@ exports.builder = yargs => yargs
     describe: 'Set to indicate that this clone will be "genesis"; ' +
       'that is, the first new clone on a new domain'
   })
-  .option('backend', {
-    // leveldown requires dataDir
-    choices: ['leveldown', 'memdown'],
-    default: 'memdown'
-  })
-  .option('remotes', {
-    describe: 'Remotes (messaging) type to use',
-    choices: REMOTES
-  })
-  .default('logLevel', process.env.LOG)
+  .describe('backend', 'Backend extension to use')
+  .describe('remotes', 'Remotes (messaging) extension to use')
   .normalize('dataDir')
   .config()
   .env('CLI')
-  .demandOption(['@domain', 'backend'])
+  .demandOption('@domain')
   .check(argv => {
-    if (argv.backend === 'leveldown' && argv.dataDir == null)
-      throw new Error('leveldown backend must have a dataDir');
+    // Check that a selected backend exists and checks out
+    const backendExt = backendModule(argv);
+    if (backendExt == null)
+      new Error('Backend not specified or not supported');
+    const backendCheck = 'check' in backendExt ? backendExt.check(argv) : true;
     if (argv.remotes != null && argv[argv.remotes] == null)
       throw new Error(`no configuration specified for ${argv.remotes}`);
-    return true;
+    return backendCheck;
   });
 
 /**
@@ -65,46 +60,36 @@ exports.handler = async argv => {
   }
 };
 
+/**
+ * @param {MeldAblyConfig|MeldWrtcConfig|StartConfig} config
+ * @returns {module:ExtensionModule}
+ */
+function backendModule(config) {
+  return config.ext.find(ext =>
+    ext['@type'] === 'backend' &&
+    (config.backend ? ext['@id'] === config.backend : ext.isDefault));
+}
+
 class MeldChildApp {
+  /**
+   * @param {MeldAblyConfig|MeldWrtcConfig|StartConfig} config
+   */
   constructor(config) {
     this.config = config;
     this.meta = { '@id': this.config['@id'] };
-    this.backend = this.createBackend();
+    this.backend = backendModule(config).getInstance(config);
     this.remotes = this.createRemotes();
   }
 
   async createRemotes() {
     // Find the first type requested, or for which configuration exists
-    const remotesType = REMOTES.find(type => this.config.remotes === type) ||
-      REMOTES.find(type => this.config[type] != null);
-    if (remotesType === 'ably') {
-      if (this.config.wrtc) {
-        await this.createPeering();
-        return AblyWrtcRemotes;
-      } else {
-        return AblyRemotes;
-      }
-    } else if (remotesType === 'io') {
-      return IoRemotes;
-    } else {
+    const remotesModule =
+      this.config.ext.find(ext => this.config.remotes === ext['@type']) ||
+      this.config.ext.find(ext => this.config[ext['@type']] != null);
+    if (remotesModule != null)
+      return remotesModule.getInstance(this.config);
+    else
       throw new Error('Remotes not specified or not supported');
-    }
-  }
-
-  async createPeering() {
-    // Load WRTC config from Xirsys if available
-    if (this.config.xirsys)
-      this.config.wrtc = await loadWrtcConfig(this.config.xirsys);
-  }
-
-  createBackend() {
-    if (this.config.backend === 'memdown') {
-      return new (require('@m-ld/m-ld/dist/memdown').MeldMemDown)();
-    } else if (this.config.backend === 'leveldown') {
-      return (require('leveldown'))(this.config.dataDir);
-    } else {
-      throw new Error('Backend not specified or not supported');
-    }
   }
 
   async start() {
