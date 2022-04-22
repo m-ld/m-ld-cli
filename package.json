@@ -24,30 +24,30 @@
     "m-ld": "./index.js"
   },
   "dependencies": {
-    "@m-ld/io-web-runtime": "^0.2.0",
     "@m-ld/m-ld": "^0.8.2",
-    "ably": "^1.2.14",
-    "dotenv": "^10.0.0",
+    "dotenv": "^16.0.0",
     "faker": "^5.5.3",
     "get-stream": "^6.0.1",
     "json-stringify-pretty-compact": "^3.0.0",
     "JSONStream": "^1.3.5",
-    "leveldown": "^6.1.0",
-    "memdown": "^6.1.1",
     "merge-stream": "^2.0.0",
     "shell-quote": "^1.7.3",
-    "simple-peer": "^9.11.0",
-    "socket.io": "^4.4.0",
-    "socket.io-client": "^4.4.0",
-    "wrtc": "^0.4.7",
     "yargs": "^17.2.1"
   },
   "devDependencies": {
+    "@m-ld/io-web-runtime": "^0.2.0",
     "@types/jest": "^27.4.1",
     "@types/merge-stream": "^1.1.2",
     "@types/shell-quote": "^1.7.1",
     "@types/yargs": "^17.0.5",
+    "ably": "^1.2.14",
     "jest": "^27.3.1",
-    "tmp": "^0.2.1"
+    "leveldown": "^6.1.0",
+    "memdown": "^6.1.1",
+    "simple-peer": "^9.11.0",
+    "socket.io": "^4.4.0",
+    "socket.io-client": "^4.4.0",
+    "tmp": "^0.2.1",
+    "wrtc": "^0.4.7"
   }
 }

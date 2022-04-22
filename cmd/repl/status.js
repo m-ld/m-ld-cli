@@ -9,7 +9,7 @@ const { Proc } = require('../../lib/Proc');
  * @param {CmdContext} ctx
  * @returns {yargs.CommandModule<{}, StatusOpts>}
  */
-module.exports = (ctx) => ({
+module.exports = ctx => ({
   command: 'status [@id]',
   describe: 'Interrogates the status of a clone',
   builder: yargs => yargs

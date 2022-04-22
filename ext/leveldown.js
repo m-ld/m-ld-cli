@@ -2,6 +2,7 @@
 
 exports['@id'] = 'leveldown';
 exports['@type'] = 'backend';
+exports.filename = module.filename;
 
 /** @param {string} dataDir */
 exports.check = ({ dataDir }) => {

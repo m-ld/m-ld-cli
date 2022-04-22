@@ -2,6 +2,7 @@
 
 exports['@id'] = 'ably';
 exports['@type'] = 'remotes';
+exports.filename = module.filename;
 
 /** @param {object} config */
 exports.getInstance = async config => {
