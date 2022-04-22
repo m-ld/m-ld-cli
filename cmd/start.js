@@ -84,8 +84,8 @@ class MeldChildApp {
   async createRemotes() {
     // Find the first type requested, or for which configuration exists
     const remotesModule =
-      this.config.ext.find(ext => this.config.remotes === ext['@type']) ||
-      this.config.ext.find(ext => this.config[ext['@type']] != null);
+      this.config.ext.find(ext => this.config.remotes === ext['@id']) ||
+      this.config.ext.find(ext => this.config[ext['@id']] != null);
     if (remotesModule != null)
       return remotesModule.getInstance(this.config);
     else
