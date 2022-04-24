@@ -27,9 +27,8 @@ module.exports = (ctx) => ({
         'For example, to transact each item of an array, use \'*\''
     }),
   /** @param {WriteOpts} argv */
-  handler: argv => {
-    ctx.proc = new WriteCloneProc(ctx, argv['@id'], argv.jrql, argv.path);
-  }
+  handler: argv => ctx.exec( () =>
+    new WriteCloneProc(ctx, argv['@id'], argv.jrql, argv.path))
 });
 
 class WriteCloneProc extends Proc {

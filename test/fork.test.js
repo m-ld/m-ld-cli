@@ -10,7 +10,8 @@ describe('Fork command', () => {
       cmdId: '1',
       args: [testScript],
       proc: null,
-      opts: { ext: [{ filename: 'testExt'}] },
+      exec: fn => ctx.proc = fn(),
+      opts: { ext: [{ filename: 'testExt' }] },
       ...testCtx
     };
     const modulePath = require.resolve(`./mock-scripts/${testScript}`);

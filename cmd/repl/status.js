@@ -14,9 +14,7 @@ module.exports = ctx => ({
   describe: 'Interrogates the status of a clone',
   builder: yargs => yargs
     .option('@id', ctx.childProcs.childIdOption('status')),
-  handler: argv => {
-    ctx.proc = new StatusCloneProc(ctx, argv['@id']);
-  }
+  handler: argv => ctx.exec( () => new StatusCloneProc(ctx, argv['@id']))
 });
 
 class StatusCloneProc extends Proc {

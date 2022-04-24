@@ -17,7 +17,6 @@ describe('Command line executor', () => {
     // Unknown command is a user error, not a process error
     expect(errLines.mock.calls.length).toBe(0);
     expect(outLines.mock.calls).toEqual([
-      ['Unknown command: bunkum'],
       [expect.stringMatching(/TEST[\S\s]*Commands:[\S\s]*Options:/)]
     ]);
   });
@@ -56,8 +55,9 @@ describe('Command line executor', () => {
       buildCommands(yargs, ctx) {
         return yargs.command('bunkum', 'Bunkum!',
           yargs => yargs, () => {
-          ctx.proc = new Proc();
-          setImmediate(() => ctx.proc.setDone('error'));
+            const proc = new Proc();
+            ctx.exec( () => proc);
+          setImmediate(() => proc.setDone('error'));
         });
       }
     })(testOpts);
@@ -72,8 +72,9 @@ describe('Command line executor', () => {
         return yargs.command('bunkum', 'Bunkum!',
           yargs => yargs,
           () => {
-            ctx.proc = new Proc();
-            trigger.on('pull', () => ctx.proc.setDone());
+            const proc = new Proc();
+            ctx.exec( () => proc);
+            trigger.on('pull', () => proc.setDone());
           });
       }
     })(testOpts);
@@ -88,9 +89,8 @@ describe('Command line executor', () => {
     const cmdLine = new (class extends CommandLine {
       buildCommands(yargs, ctx) {
         return yargs.command('bunkum', 'Bunkum!',
-          yargs => yargs, () => {
-            ctx.proc = new SyncProc(Readable.from(['I am a fish']));
-          });
+          yargs => yargs, () =>
+            ctx.exec(() => new SyncProc(Readable.from(['I am a fish']))));
       }
     })(testOpts);
     const outLines = jest.fn();
@@ -103,10 +103,11 @@ describe('Command line executor', () => {
       buildCommands(yargs, ctx) {
         return yargs.command('bunkum', 'Bunkum!',
           yargs => yargs, () => {
-            ctx.proc = new Proc();
+            const proc = new Proc();
+            ctx.exec( () => proc);
             setImmediate(() => {
-              ctx.proc.emit('message', 'I am a tree');
-              ctx.proc.setDone();
+              proc.emit('message', 'I am a tree');
+              proc.setDone();
             })
           });
       }

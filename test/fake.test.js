@@ -6,16 +6,18 @@ const getStream = require('get-stream');
 
 describe('Fake command', () => {
   async function doFake(args, stdin) {
+    let /**@type Proc*/proc;
     const ctx = /**@type {CmdContext}*/{
       childProcs: new ChildProcs,
-      cmdId: '1', args, stdin, proc: null
+      cmdId: '1', args, stdin,
+      exec: fn => proc = fn()
     };
     yargs(args)
       .exitProcess(false)
       .command(fake(ctx))
       .parseSync();
     // Make sure that done is emitted
-    const [, out] = await Promise.all([ctx.proc.done, getStream(ctx.proc.stdout)]);
+    const [, out] = await Promise.all([proc.done, getStream(proc.stdout)]);
     return JSON.parse(out);
   }
 

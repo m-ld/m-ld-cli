@@ -14,9 +14,7 @@ module.exports = (ctx) => ({
   describe: 'Stops a child process',
   builder: yargs => yargs
     .option('@id', ctx.childProcs.childIdOption('stop')),
-  handler: argv => {
-    ctx.proc = new StopCloneProc(ctx, argv['@id']);
-  }
+  handler: argv => ctx.exec( () => new StopCloneProc(ctx, argv['@id']))
 });
 
 class StopCloneProc extends Proc {

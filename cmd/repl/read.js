@@ -22,9 +22,7 @@ module.exports = (ctx) => ({
     })
     .option('@id', ctx.childProcs.childIdOption('read')),
   /** @param {ReadOpts} argv */
-  handler: argv => {
-    ctx.proc = new ReadCloneProc(ctx, argv['@id'], argv.jrql);
-  }
+  handler: argv => ctx.exec( () => new ReadCloneProc(ctx, argv['@id'], argv.jrql))
 });
 
 class ReadCloneProc extends Proc {

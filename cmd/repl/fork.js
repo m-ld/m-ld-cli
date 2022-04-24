@@ -19,9 +19,7 @@ module.exports = (ctx, meta) => ({
       hidden: true, // This is only an option for testing
       default: require.resolve('../../index')
     }),
-  handler: ({ modulePath }) => {
-    ctx.proc = new ForkProc(modulePath, ctx);
-  }
+  handler: ({ modulePath }) => ctx.exec( () => new ForkProc(modulePath, ctx))
 });
 
 class ForkProc extends Proc {

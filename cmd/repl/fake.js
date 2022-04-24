@@ -29,9 +29,7 @@ module.exports = (ctx) => ({
       default: 1
     })
     .number('seed'),
-  handler: argv => {
-    ctx.proc = new FakerProc(ctx, argv);
-  }
+  handler: argv => ctx.exec(() => new FakerProc(ctx, argv))
 });
 
 class FakerProc extends SyncProc {

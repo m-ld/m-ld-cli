@@ -18,20 +18,21 @@ describe('File command', () => {
   });
 
   test('Writes to a file', done => {
+    let /**@type Proc*/proc;
     const ctx = /**@type {CmdContext}*/{
       childProcs: new ChildProcs,
       cmdId: '1',
       args: [tmpFileName],
-      proc: null,
-      stdin: Readable.from(['data to write'])
+      stdin: Readable.from(['data to write']),
+      exec: fn => proc = fn()
     };
     yargs(tmpFileName)
       .exitProcess(false)
       .command(file(ctx))
       .parseSync();
-    ctx.proc.on('done', () => {
+    proc.on('done', () => {
       // File is open, but not written until exit
-      ctx.proc.on('exit', () => {
+      proc.on('exit', () => {
         expect(readFileSync(tmpFileName, 'utf-8')).toBe('data to write');
         done();
       });
@@ -39,18 +40,19 @@ describe('File command', () => {
   });
 
   test('Reads from a file', async () => {
+    let /**@type Proc*/proc;
     const ctx = /**@type {CmdContext}*/{
       childProcs: new ChildProcs,
       cmdId: '1',
       args: [tmpFileName],
-      proc: null
+      exec: fn => proc = fn()
     };
     writeFileSync(tmpFileName, 'data to read', 'utf-8');
     yargs(tmpFileName)
       .exitProcess(false)
       .command(file(ctx))
       .parseSync();
-    const [, data] = await Promise.all([ctx.proc.done, getStream(ctx.proc.stdout)]);
+    const [, data] = await Promise.all([proc.done, getStream(proc.stdout)]);
     expect(data).toBe('data to read');
   });
 });

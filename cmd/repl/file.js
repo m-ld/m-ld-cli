@@ -11,7 +11,7 @@ const { Proc, SyncProc } = require('../../lib/Proc');
  * @param {CmdContext} ctx
  * @returns {yargs.CommandModule<{}, FileOpts>}
  */
-module.exports = (ctx) => ({
+module.exports = ctx => ({
   command: '$0 [file]',
   describe: 'Read or write a file',
   builder: yargs => yargs
@@ -19,13 +19,17 @@ module.exports = (ctx) => ({
       string: true,
       describe: 'File path to read or write',
       normalize: true
-    }),
-  handler: argv => {
+    })
+    .check(argv =>
+      ctx.stdin != null ||
+      fs.existsSync(argv.file) ||
+      `No command or file "${argv.file}"`),
+  handler: argv => ctx.exec(() => {
     if (ctx.stdin == null)
-      ctx.proc = new ReadFileProc(argv.file);
+      return new ReadFileProc(argv.file);
     else
-      ctx.proc = new WriteFileProc(argv.file, ctx.stdin);
-  }
+      return new WriteFileProc(argv.file, ctx.stdin);
+  })
 });
 
 class ReadFileProc extends SyncProc {
