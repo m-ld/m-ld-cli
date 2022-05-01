@@ -1,6 +1,6 @@
 {
   "name": "@m-ld/m-ld-cli",
-  "version": "0.0.0",
+  "version": "0.1.0-0",
   "description": "m-ld Node.js terminal app for local persistence & data loading",
   "main": "index.js",
   "scripts": {
