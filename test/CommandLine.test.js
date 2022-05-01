@@ -17,7 +17,8 @@ describe('Command line executor', () => {
     // Unknown command is a user error, not a process error
     expect(errLines.mock.calls.length).toBe(0);
     expect(outLines.mock.calls).toEqual([
-      [expect.stringMatching(/TEST[\S\s]*Commands:[\S\s]*Options:/)]
+      [expect.stringMatching(/TEST[\S\s]*Commands:[\S\s]*Options:/)],
+      [expect.stringMatching(/Unknown command: bunkum/)]
     ]);
   });
 
