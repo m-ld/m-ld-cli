@@ -1,5 +1,5 @@
 const socket = require('socket.io');
-const { IoRemotesService } = require('@m-ld/m-ld/dist/socket.io-server');
+const { IoRemotesService } = require('@m-ld/m-ld/ext/socket.io-server');
 const host = require('../lib/host');
 const { uuid } = require('@m-ld/m-ld');
 

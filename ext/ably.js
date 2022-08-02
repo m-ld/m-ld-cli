@@ -10,7 +10,7 @@ exports.getInstance = async config => {
   if (config.xirsys)
     config.wrtc = await require('@m-ld/io-web-runtime/dist/server/xirsys')
       .loadWrtcConfig(config.xirsys);
-  const ablyModule = require('@m-ld/m-ld/dist/ably');
+  const ablyModule = require('@m-ld/m-ld/ext/ably');
   if (config.wrtc)
     return ablyModule.AblyWrtcRemotes;
   else

@@ -6,4 +6,4 @@ exports.filename = module.filename;
 exports.isDefault = true;
 
 exports.getInstance = () =>
-  new (require('@m-ld/m-ld/dist/memdown')).MeldMemDown();
+  new (require('@m-ld/m-ld/ext/memdown')).MeldMemDown();
