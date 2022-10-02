@@ -1,10 +1,11 @@
 {
   "name": "@m-ld/m-ld-cli",
-  "version": "0.1.0-2",
+  "version": "0.1.0-edge.0",
   "description": "m-ld Node.js terminal app for local persistence & data loading",
   "main": "index.js",
   "scripts": {
-    "prepublishOnly": "npm run test && npm version $VERSION && git push",
+    "ver": "echo $npm_package_version",
+    "build": "npm run test",
     "test": "jest"
   },
   "repository": {
@@ -25,7 +26,7 @@
     "m-ld": "./index.js"
   },
   "dependencies": {
-    "@m-ld/m-ld": "^0.9.0-5",
+    "@m-ld/m-ld": "^0.9.0-edge.1",
     "dotenv": "^16.0.0",
     "faker": "5.5.3",
     "get-stream": "^6.0.1",
@@ -36,15 +37,16 @@
     "yargs": "^17.2.1"
   },
   "devDependencies": {
+    "@m-ld/io-js-build": "^0.1.2",
     "@m-ld/io-web-runtime": "^0.2.2-2",
     "@types/jest": "^28.1.6",
     "@types/merge-stream": "^1.1.2",
     "@types/shell-quote": "^1.7.1",
     "@types/yargs": "^17.0.5",
     "ably": "^1.2.14",
+    "classic-level": "^1.2.0",
     "jest": "^28.0.3",
-    "leveldown": "^6.1.0",
-    "memdown": "^6.1.1",
+    "memory-level": "^1.0.0",
     "simple-peer": "^9.11.0",
     "socket.io": "^4.4.0",
     "socket.io-client": "^4.4.0",

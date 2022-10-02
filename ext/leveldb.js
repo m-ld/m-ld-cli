@@ -12,4 +12,4 @@ exports.check = ({ dataDir }) => {
 
 /** @param {string} dataDir */
 exports.getInstance = ({ dataDir }) =>
-  (require('leveldown'))(dataDir);
+  (require('classic-level'))(dataDir);
