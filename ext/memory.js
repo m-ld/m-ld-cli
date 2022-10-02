@@ -1,9 +1,9 @@
 /** @module {ExtensionModule} */
 
-exports['@id'] = 'memdown';
+exports['@id'] = 'memory';
 exports['@type'] = 'backend';
 exports.filename = module.filename;
 exports.isDefault = true;
 
 exports.getInstance = () =>
-  new (require('@m-ld/m-ld/ext/memdown')).MeldMemDown();
+  new (require('memory-level').MemoryLevel)();

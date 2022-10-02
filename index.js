@@ -8,8 +8,8 @@ const { buildGlobalOpts } = require('./lib/opts');
 // noinspection JSCheckFunctionSignatures
 buildGlobalOpts(yargs(hideBin(process.argv)), [
   // By default, include all extensions as options
-  './ext/memdown',
-  './ext/leveldown',
+  './ext/memory',
+  './ext/leveldb',
   './ext/ably',
   './ext/io'
 ], require)

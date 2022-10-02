@@ -1,6 +1,6 @@
 /** @module {ExtensionModule} */
 
-exports['@id'] = 'leveldown';
+exports['@id'] = 'leveldb';
 exports['@type'] = 'backend';
 exports.filename = module.filename;
 
@@ -12,4 +12,4 @@ exports.check = ({ dataDir }) => {
 
 /** @param {string} dataDir */
 exports.getInstance = ({ dataDir }) =>
-  (require('classic-level'))(dataDir);
+  new (require('classic-level').ClassicLevel)(dataDir);
