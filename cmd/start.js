@@ -1,8 +1,8 @@
 const { uuid, clone } = require('@m-ld/m-ld');
 const host = require('../lib/host');
 
-/** @typedef { import('@m-ld/m-ld/dist/ably').MeldAblyConfig } MeldAblyConfig */
-/** @typedef { import('@m-ld/m-ld/dist/wrtc').MeldWrtcConfig } MeldWrtcConfig */
+/** @typedef { import('@m-ld/m-ld/ext/ably').MeldAblyConfig } MeldAblyConfig */
+/** @typedef { import('@m-ld/m-ld/ext/wrtc').MeldWrtcConfig } MeldWrtcConfig */
 /** @typedef { import('@m-ld/io-web-runtime/dist/server/xirsys').XirsysConfig } XirsysConfig */
 
 /**
