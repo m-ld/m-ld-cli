@@ -1,7 +1,7 @@
 const { SyncProc } = require('../../lib/Proc');
 const { Readable } = require('stream');
 const getStream = require('get-stream');
-const faker = require('faker');
+const faker = require('faker/locale/en');
 
 /**
  * The `fake` command generates fake data using a given input template.
