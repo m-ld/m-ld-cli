@@ -1,7 +1,7 @@
 const { SyncProc } = require('../../lib/Proc');
 const { Readable } = require('stream');
 const getStream = require('get-stream');
-const faker = require('faker/locale/en');
+const { faker } = require('@faker-js/faker/locale/en');
 
 /**
  * The `fake` command generates fake data using a given input template.
@@ -62,7 +62,7 @@ class FakerStream extends Readable {
     } else if (this._index === this._count) {
       this.push(null);
     } else {
-      this.push(Buffer.from(faker.fake(await this._input)) +
+      this.push(Buffer.from(faker.helpers.fake(await this._input)) +
         (++this._index === this._count ? ']' : ','));
     }
   }
